@@ -22,7 +22,7 @@ export default function Recommendations() {
   const [selectedProvider, setSelectedProvider] = useState("all");
 
   const { data: recommendations = [] } = useQuery({
-    queryKey: ["/api/recommendations"],
+    queryKey: ["/api/recommendations/personalized"],
     enabled: isAuthenticated,
   });
 

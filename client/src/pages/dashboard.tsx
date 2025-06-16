@@ -39,6 +39,11 @@ export default function Dashboard() {
     enabled: isAuthenticated,
   });
 
+  const { data: codingChallenge } = useQuery({
+    queryKey: ["/api/coding-challenge/personalized"],
+    enabled: isAuthenticated,
+  });
+
   const { data: leaderboard = [] } = useQuery({
     queryKey: ["/api/leaderboard"],
     enabled: isAuthenticated,
@@ -205,6 +210,66 @@ export default function Dashboard() {
                     </div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Weekly Coding Challenge */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Code className="h-5 w-5" />
+                  <span>Weekly Coding Challenge</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {codingChallenge ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-slate-800">{codingChallenge.title}</h3>
+                      <Badge variant="outline" className="text-xs">
+                        {codingChallenge.difficulty}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-slate-600">{codingChallenge.description}</p>
+                    
+                    <div className="bg-slate-50 p-4 rounded-lg">
+                      <h4 className="font-medium text-slate-700 mb-2">Problem Statement:</h4>
+                      <p className="text-sm text-slate-600">{codingChallenge.problemStatement}</p>
+                    </div>
+
+                    {codingChallenge.hints && codingChallenge.hints.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-slate-700">Hints:</h4>
+                        <ul className="space-y-1">
+                          {codingChallenge.hints.map((hint, index) => (
+                            <li key={index} className="text-sm text-slate-600 flex items-start space-x-2">
+                              <span className="text-primary">•</span>
+                              <span>{hint}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-4 border-t">
+                      <div className="flex items-center space-x-4">
+                        <Badge variant="secondary">{codingChallenge.points} points</Badge>
+                        <span className="text-sm text-slate-500">
+                          {codingChallenge.category} • {codingChallenge.jobRole}
+                        </span>
+                      </div>
+                      <Button size="sm">Start Challenge</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Code className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-slate-600 mb-2">No Challenge Available</h3>
+                    <p className="text-sm text-slate-500">
+                      Complete your profile and add skills to get personalized coding challenges.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

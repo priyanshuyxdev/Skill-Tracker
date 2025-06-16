@@ -107,21 +107,22 @@ SkillTracker is a comprehensive web application designed for students to track t
 
 ## Recent Changes
 
-### June 16, 2025 - Complete Feature Implementation
-- ✅ Added all missing routes: `/skills`, `/recommendations`, `/leaderboard` 
-- ✅ Implemented skill-based personalized recommendation system
-- ✅ Added comprehensive Skills page with filtering and statistics
-- ✅ Created detailed Recommendations page with personalized matching
-- ✅ Built competitive Leaderboard with ranking system
-- ✅ Populated database with sample recommendations and challenges
-- ✅ Fixed all navigation and button functionality
-- ✅ Implemented smart recommendation matching based on user skills and categories
+### June 16, 2025 - Job Role-Based Personalized System
+- ✅ Implemented job role preference system in user profiles
+- ✅ Created personalized coding challenges based on user skill level and job role
+- ✅ Enhanced recommendation engine to prioritize job role matching
+- ✅ Added weekly coding challenge feature with submission tracking
+- ✅ Limited recommendations to 6 most relevant items to avoid overwhelming users
+- ✅ Built coding challenge leaderboard with point system
+- ✅ Added comprehensive profile form with job role selection
+- ✅ Implemented smart difficulty detection for coding challenges
 
 ### Technical Improvements
-- Enhanced recommendation algorithm to match user skills with course tags
-- Added personalized recommendation API endpoint
-- Improved UI components with proper error handling
-- Fixed CSS import issues and component dependencies
+- Job role-based recommendation algorithm with scoring system
+- Personalized coding challenge API endpoints
+- Coding submission tracking with status and feedback
+- Enhanced database schema with job roles and coding challenges
+- Improved user experience with focused, relevant content delivery
 
 ## Changelog
 

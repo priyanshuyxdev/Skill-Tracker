@@ -226,6 +226,36 @@ export default function Profile() {
                       />
                     </div>
 
+                    <FormField
+                      control={form.control}
+                      name="preferredJobRole"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Preferred Job Role</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select your preferred job role" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="frontend-developer">Frontend Developer</SelectItem>
+                              <SelectItem value="backend-developer">Backend Developer</SelectItem>
+                              <SelectItem value="fullstack-developer">Full Stack Developer</SelectItem>
+                              <SelectItem value="data-analyst">Data Analyst</SelectItem>
+                              <SelectItem value="data-scientist">Data Scientist</SelectItem>
+                              <SelectItem value="mobile-developer">Mobile Developer</SelectItem>
+                              <SelectItem value="devops-engineer">DevOps Engineer</SelectItem>
+                              <SelectItem value="ui-ux-designer">UI/UX Designer</SelectItem>
+                              <SelectItem value="product-manager">Product Manager</SelectItem>
+                              <SelectItem value="software-engineer">Software Engineer</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <div className="border-t border-slate-200 pt-6">
                       <Label className="text-sm font-medium text-slate-700">Email Address</Label>
                       <p className="text-sm text-slate-600 mt-1">{user?.email}</p>
