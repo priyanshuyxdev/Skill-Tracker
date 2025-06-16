@@ -234,6 +234,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Submit coding challenge solution with AI checking
+  app.post('/api/coding-challenges/submit', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { challengeId, solution } = req.body;
+      
+      const result = await storage.submitCodingChallenge(userId, challengeId, solution);
+      res.json(result);
+    } catch (error) {
+      console.error("Error submitting coding challenge:", error);
+      res.status(500).json({ message: "Failed to submit solution" });
+    }
+  });
+
+  // Get career guidance
+  app.get('/api/career-guidance', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const guidance = await storage.getCareerGuidance(userId);
+      res.json(guidance);
+    } catch (error) {
+      console.error("Error fetching career guidance:", error);
+      res.status(500).json({ message: "Failed to fetch career guidance" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

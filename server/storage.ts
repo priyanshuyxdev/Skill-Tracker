@@ -64,6 +64,8 @@ export interface IStorage {
   createCodingSubmission(submission: InsertCodingSubmission): Promise<CodingSubmission>;
   getCodingSubmissions(userId: string): Promise<CodingSubmission[]>;
   getCodingLeaderboard(): Promise<Array<{ user: User; totalScore: number; submissionCount: number }>>;
+  submitCodingChallenge(userId: string, challengeId: number, solution: string): Promise<any>;
+  getCareerGuidance(userId: string): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -345,6 +347,69 @@ export class DatabaseStorage implements IStorage {
     }
 
     return result;
+  }
+
+  async submitCodingChallenge(userId: string, challengeId: number, solution: string): Promise<any> {
+    const { checkCodingSolution } = await import('./openai');
+    
+    // Get the challenge details
+    const [challenge] = await db
+      .select()
+      .from(codingChallenges)
+      .where(eq(codingChallenges.id, challengeId));
+
+    if (!challenge) {
+      throw new Error("Challenge not found");
+    }
+
+    // Check solution with AI
+    const result = await checkCodingSolution(
+      challenge.problemStatement,
+      challenge.expectedOutput || "Correct implementation",
+      solution,
+      challenge.difficulty
+    );
+
+    // Create submission record
+    const submission = await this.createCodingSubmission({
+      userId,
+      challengeId,
+      solution,
+      score: result.score,
+      feedback: result.feedback,
+      status: result.isCorrect ? "correct" : "incorrect"
+    });
+
+    return {
+      submission,
+      result
+    };
+  }
+
+  async getCareerGuidance(userId: string): Promise<any> {
+    const { generateCareerGuidance } = await import('./openai');
+    
+    // Get user profile and skills
+    const user = await this.getUser(userId);
+    const skills = await this.getUserSkills(userId);
+
+    if (!user || !user.preferredJobRole) {
+      return {
+        roadmap: ["Please complete your profile with preferred job role to get personalized guidance"],
+        suggestedSkills: [],
+        timelineWeeks: 12,
+        resources: []
+      };
+    }
+
+    const skillNames = skills.map(skill => skill.name);
+    const avgLevel = skills.length > 0 
+      ? skills.reduce((sum, skill) => sum + (skill.level === "Beginner" ? 1 : skill.level === "Intermediate" ? 2 : 3), 0) / skills.length
+      : 1;
+    
+    const levelName = avgLevel < 1.5 ? "Beginner" : avgLevel < 2.5 ? "Intermediate" : "Advanced";
+
+    return await generateCareerGuidance(skillNames, user.preferredJobRole, levelName);
   }
 }
 
