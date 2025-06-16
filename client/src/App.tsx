@@ -8,6 +8,9 @@ import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Profile from "@/pages/profile";
 import Admin from "@/pages/admin";
+import Skills from "@/pages/skills";
+import Recommendations from "@/pages/recommendations";
+import Leaderboard from "@/pages/leaderboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +23,9 @@ function Router() {
       ) : (
         <>
           <Route path="/" component={Dashboard} />
+          <Route path="/skills" component={Skills} />
+          <Route path="/recommendations" component={Recommendations} />
+          <Route path="/leaderboard" component={Leaderboard} />
           <Route path="/profile" component={Profile} />
           <Route path="/admin" component={Admin} />
         </>
