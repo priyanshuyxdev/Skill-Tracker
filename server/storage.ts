@@ -267,6 +267,85 @@ export class DatabaseStorage implements IStorage {
       activeUsers: activeStats.count || 0,
     };
   }
+
+  // Coding challenge operations
+  async getPersonalizedCodingChallenge(userId: string): Promise<CodingChallenge | undefined> {
+    const user = await this.getUser(userId);
+    const userSkills = await db.select().from(skills).where(eq(skills.userId, userId));
+    
+    if (!user) return undefined;
+
+    // Determine difficulty based on user's skill levels
+    const skillLevels = userSkills.map(skill => skill.level.toLowerCase());
+    let targetDifficulty = 'beginner';
+    
+    if (skillLevels.includes('advanced') || skillLevels.includes('expert')) {
+      targetDifficulty = 'advanced';
+    } else if (skillLevels.includes('intermediate')) {
+      targetDifficulty = 'intermediate';
+    }
+
+    // Find challenges matching user's job role preference and difficulty
+    let challenges = await db.select().from(codingChallenges).where(
+      and(
+        eq(codingChallenges.isActive, true),
+        eq(codingChallenges.difficulty, targetDifficulty)
+      )
+    );
+
+    // Filter by job role if available
+    if (user.preferredJobRole && challenges.length > 0) {
+      const jobRoleMatches = challenges.filter(challenge => 
+        challenge.jobRole.toLowerCase().includes(user.preferredJobRole!.toLowerCase()) ||
+        user.preferredJobRole!.toLowerCase().includes(challenge.jobRole.toLowerCase())
+      );
+      if (jobRoleMatches.length > 0) {
+        challenges = jobRoleMatches;
+      }
+    }
+
+    // Return a random challenge from the filtered set
+    return challenges.length > 0 ? challenges[Math.floor(Math.random() * challenges.length)] : undefined;
+  }
+
+  async getCodingChallenges(): Promise<CodingChallenge[]> {
+    return await db.select().from(codingChallenges).where(eq(codingChallenges.isActive, true));
+  }
+
+  async createCodingSubmission(submission: InsertCodingSubmission): Promise<CodingSubmission> {
+    const [newSubmission] = await db.insert(codingSubmissions).values(submission).returning();
+    return newSubmission;
+  }
+
+  async getCodingSubmissions(userId: string): Promise<CodingSubmission[]> {
+    return await db.select().from(codingSubmissions).where(eq(codingSubmissions.userId, userId)).orderBy(desc(codingSubmissions.submittedAt));
+  }
+
+  async getCodingLeaderboard(): Promise<Array<{ user: User; totalScore: number; submissionCount: number }>> {
+    const leaderboardData = await db
+      .select({
+        userId: codingSubmissions.userId,
+        totalScore: sql<number>`sum(${codingSubmissions.score})`,
+        submissionCount: count(codingSubmissions.id),
+      })
+      .from(codingSubmissions)
+      .groupBy(codingSubmissions.userId)
+      .orderBy(desc(sql<number>`sum(${codingSubmissions.score})`));
+
+    const result = [];
+    for (const entry of leaderboardData) {
+      const user = await this.getUser(entry.userId);
+      if (user) {
+        result.push({
+          user,
+          totalScore: entry.totalScore || 0,
+          submissionCount: entry.submissionCount,
+        });
+      }
+    }
+
+    return result;
+  }
 }
 
 export const storage = new DatabaseStorage();

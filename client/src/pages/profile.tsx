@@ -13,6 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -20,6 +21,7 @@ const profileSchema = z.object({
   college: z.string().min(1, "College is required"),
   course: z.string().min(1, "Course is required"),
   graduationYear: z.number().min(2020).max(2030),
+  preferredJobRole: z.string().optional(),
 });
 
 type ProfileForm = z.infer<typeof profileSchema>;
@@ -37,6 +39,7 @@ export default function Profile() {
       college: user?.college || "",
       course: user?.course || "",
       graduationYear: user?.graduationYear || new Date().getFullYear() + 1,
+      preferredJobRole: user?.preferredJobRole || "",
     },
   });
 
@@ -48,6 +51,7 @@ export default function Profile() {
         college: user.college || "",
         course: user.course || "",
         graduationYear: user.graduationYear || new Date().getFullYear() + 1,
+        preferredJobRole: user.preferredJobRole || "",
       });
     }
   }, [user, form]);

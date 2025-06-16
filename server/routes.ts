@@ -143,6 +143,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Coding challenge routes
+  app.get('/api/coding-challenge/personalized', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const challenge = await storage.getPersonalizedCodingChallenge(userId);
+      res.json(challenge);
+    } catch (error) {
+      console.error("Error fetching personalized coding challenge:", error);
+      res.status(500).json({ message: "Failed to fetch coding challenge" });
+    }
+  });
+
+  app.post('/api/coding-submission', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const submission = await storage.createCodingSubmission({
+        ...req.body,
+        userId,
+        status: 'submitted',
+        score: 10, // Default score, can be updated later
+      });
+      res.json(submission);
+    } catch (error) {
+      console.error("Error creating coding submission:", error);
+      res.status(500).json({ message: "Failed to submit solution" });
+    }
+  });
+
+  app.get('/api/coding-leaderboard', isAuthenticated, async (req: any, res) => {
+    try {
+      const leaderboard = await storage.getCodingLeaderboard();
+      res.json(leaderboard);
+    } catch (error) {
+      console.error("Error fetching coding leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch coding leaderboard" });
+    }
+  });
+
   // Admin routes
   app.get('/api/admin/users', isAuthenticated, async (req: any, res) => {
     try {
