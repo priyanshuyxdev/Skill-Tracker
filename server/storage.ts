@@ -5,6 +5,8 @@ import {
   recommendations,
   challenges,
   userChallengeProgress,
+  codingChallenges,
+  codingSubmissions,
   type User,
   type UpsertUser,
   type InsertSkill,
@@ -15,6 +17,10 @@ import {
   type Challenge,
   type UserChallengeProgress,
   type UpdateProfile,
+  type CodingChallenge,
+  type InsertCodingChallenge,
+  type CodingSubmission,
+  type InsertCodingSubmission,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, count, sql, and } from "drizzle-orm";
@@ -51,6 +57,13 @@ export interface IStorage {
   // Admin operations
   getAllUsers(): Promise<User[]>;
   getTotalStats(): Promise<{ totalUsers: number; totalSkills: number; activeUsers: number }>;
+  
+  // Coding challenge operations
+  getPersonalizedCodingChallenge(userId: string): Promise<CodingChallenge | undefined>;
+  getCodingChallenges(): Promise<CodingChallenge[]>;
+  createCodingSubmission(submission: InsertCodingSubmission): Promise<CodingSubmission>;
+  getCodingSubmissions(userId: string): Promise<CodingSubmission[]>;
+  getCodingLeaderboard(): Promise<Array<{ user: User; totalScore: number; submissionCount: number }>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -119,12 +132,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPersonalizedRecommendations(userId: string): Promise<Recommendation[]> {
-    // Get user skills first
+    // Get user profile and skills
+    const user = await this.getUser(userId);
     const userSkills = await db.select().from(skills).where(eq(skills.userId, userId));
     
-    if (userSkills.length === 0) {
-      return [];
-    }
+    if (!user) return [];
 
     // Extract skill names and categories for matching
     const skillNames = userSkills.map(skill => skill.name.toLowerCase());
@@ -133,23 +145,41 @@ export class DatabaseStorage implements IStorage {
     // Get all active recommendations
     const allRecommendations = await db.select().from(recommendations).where(eq(recommendations.isActive, true));
     
-    // Filter recommendations based on skill matching
+    // Filter recommendations based on job role preference and skills
     const personalizedRecs = allRecommendations.filter(rec => {
-      if (!rec.tags || rec.tags.length === 0) return false;
+      let matchScore = 0;
       
-      // Check if any tag matches user skills or categories
-      return rec.tags.some(tag => {
-        const tagLower = tag.toLowerCase();
-        return skillNames.some(skill => 
-          skill.includes(tagLower) || tagLower.includes(skill)
-        ) || skillCategories.some(category =>
-          category.includes(tagLower) || tagLower.includes(category)
+      // Job role matching (highest priority)
+      if (user.preferredJobRole && rec.tags) {
+        const jobRoleLower = user.preferredJobRole.toLowerCase();
+        const hasJobRoleMatch = rec.tags.some(tag => 
+          tag.toLowerCase().includes(jobRoleLower) || 
+          jobRoleLower.includes(tag.toLowerCase())
         );
-      });
+        if (hasJobRoleMatch) matchScore += 50;
+      }
+      
+      // Skill matching (medium priority)
+      if (rec.tags && rec.tags.length > 0) {
+        const skillMatches = rec.tags.filter(tag => {
+          const tagLower = tag.toLowerCase();
+          return skillNames.some(skill => 
+            skill.includes(tagLower) || tagLower.includes(skill)
+          ) || skillCategories.some(category =>
+            category.includes(tagLower) || tagLower.includes(category)
+          );
+        });
+        matchScore += skillMatches.length * 10;
+      }
+      
+      // Only return recommendations with some relevance
+      return matchScore > 0;
     });
 
-    // Sort by match percentage and return
-    return personalizedRecs.sort((a, b) => (b.matchPercentage || 0) - (a.matchPercentage || 0));
+    // Sort by relevance score and limit to top 6 to avoid overwhelming users
+    return personalizedRecs
+      .sort((a, b) => (b.matchPercentage || 0) - (a.matchPercentage || 0))
+      .slice(0, 6);
   }
 
   async createRecommendation(recommendation: any): Promise<Recommendation> {
