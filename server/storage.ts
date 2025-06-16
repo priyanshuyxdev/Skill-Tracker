@@ -375,6 +375,7 @@ export class DatabaseStorage implements IStorage {
       userId,
       challengeId,
       solution,
+      language: "javascript", // Default to JavaScript for now
       score: result.score,
       feedback: result.feedback,
       status: result.isCorrect ? "correct" : "incorrect"

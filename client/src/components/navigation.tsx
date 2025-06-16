@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { GraduationCap, Search, Bell, ChevronDown, User, Settings, LogOut, Shield } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export default function Navigation() {
   const { user } = useAuth();
