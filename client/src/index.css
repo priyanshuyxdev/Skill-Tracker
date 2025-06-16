@@ -1,3 +1,5 @@
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -120,8 +122,7 @@
   color: hsl(221, 83%, 33%); 
 }
 
-/* Font Awesome icons via CDN */
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+/* Font Awesome icons loaded at top */
 
 /* Responsive utilities */
 @media (max-width: 768px) {

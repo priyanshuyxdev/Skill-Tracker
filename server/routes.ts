@@ -104,6 +104,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/recommendations/personalized', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const personalizedRecs = await storage.getPersonalizedRecommendations(userId);
+      res.json(personalizedRecs);
+    } catch (error) {
+      console.error("Error fetching personalized recommendations:", error);
+      res.status(500).json({ message: "Failed to fetch personalized recommendations" });
+    }
+  });
+
   // Challenge routes
   app.get('/api/challenge', isAuthenticated, async (req: any, res) => {
     try {

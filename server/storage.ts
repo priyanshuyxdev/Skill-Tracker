@@ -37,6 +37,7 @@ export interface IStorage {
   
   // Recommendation operations
   getRecommendations(): Promise<Recommendation[]>;
+  getPersonalizedRecommendations(userId: string): Promise<Recommendation[]>;
   createRecommendation(recommendation: any): Promise<Recommendation>;
   
   // Challenge operations
@@ -115,6 +116,40 @@ export class DatabaseStorage implements IStorage {
 
   async getRecommendations(): Promise<Recommendation[]> {
     return await db.select().from(recommendations).where(eq(recommendations.isActive, true)).orderBy(desc(recommendations.matchPercentage));
+  }
+
+  async getPersonalizedRecommendations(userId: string): Promise<Recommendation[]> {
+    // Get user skills first
+    const userSkills = await db.select().from(skills).where(eq(skills.userId, userId));
+    
+    if (userSkills.length === 0) {
+      return [];
+    }
+
+    // Extract skill names and categories for matching
+    const skillNames = userSkills.map(skill => skill.name.toLowerCase());
+    const skillCategories = userSkills.map(skill => skill.category.toLowerCase());
+    
+    // Get all active recommendations
+    const allRecommendations = await db.select().from(recommendations).where(eq(recommendations.isActive, true));
+    
+    // Filter recommendations based on skill matching
+    const personalizedRecs = allRecommendations.filter(rec => {
+      if (!rec.tags || rec.tags.length === 0) return false;
+      
+      // Check if any tag matches user skills or categories
+      return rec.tags.some(tag => {
+        const tagLower = tag.toLowerCase();
+        return skillNames.some(skill => 
+          skill.includes(tagLower) || tagLower.includes(skill)
+        ) || skillCategories.some(category =>
+          category.includes(tagLower) || tagLower.includes(category)
+        );
+      });
+    });
+
+    // Sort by match percentage and return
+    return personalizedRecs.sort((a, b) => (b.matchPercentage || 0) - (a.matchPercentage || 0));
   }
 
   async createRecommendation(recommendation: any): Promise<Recommendation> {
